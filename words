@@ -86,12 +86,6 @@ images () {
 
 index () {
   count=${#lang[@]}
-  if [ ${dir} = ${lang[0]} ]
-    then
-      footer_links="    <ul><li><a href=\"${dir}/archive.html\">archive</a></li></ul>"
-    else
-      footer_links='    <ul><li><a href="archive.html">archive</a></li></ul>'
-  fi
   if [ ${#lang[@]} -gt 1 ]
     then
       if [ ${dir} = ${lang[0]} ]
@@ -131,18 +125,18 @@ index () {
       fi
       echo '      </article>'
     done
+  if [ ${dir} = ${lang[0]} ]
+    then
+      footer_links="    <ul><li><a href=\"${dir}/archive.html\">archive</a></li></ul>"
+    else
+      footer_links='    <ul><li><a href="archive.html">archive</a></li></ul>'
+  fi
   footer
 }
 
 archive () {
   local title="${title} - archive"
   count=${#lang[@]}
-  if [ ${dir} = ${lang[0]} ]
-    then  
-      footer_links='    <ul><li><a href="..">index</a></li></ul>'
-    else
-      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li></ul>"
-  fi
   if [ ${#lang[@]} -gt 1 ]
     then
       until [ "$count" = 0 ]
@@ -157,17 +151,17 @@ archive () {
       local title=$(basename "${md}" .md)
       echo "      <h2 class=\"center\"><a href=${title}.html>${title}</a></h2>"
     done
+  if [ ${dir} = ${lang[0]} ]
+    then  
+      footer_links='    <ul><li><a href="..">index</a></li></ul>'
+    else
+      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li></ul>"
+  fi
   footer
 }   
 
 post () {
   count=${#lang[@]}
-  if [ ${dir} = ${lang[0]} ]
-    then  
-      footer_links='    <ul><li><a href="..">index</a></li> | <li><a href="archive.html">archive</a></li></ul>'
-    else
-      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li> | <li><a href=\"archive.html\">archive</a></li></ul>"
-  fi
   if [ ${#lang[@]} -gt 1 ]
     then
       until [ "$count" = 0 ]
@@ -180,6 +174,12 @@ post () {
   echo '      <article>'
   markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d' | sed -e "s/${imgdir}/..\/${imgdir}/g"
   echo '      </article>'
+  if [ ${dir} = ${lang[0]} ]
+    then  
+      footer_links='    <ul><li><a href="..">index</a></li> | <li><a href="archive.html">archive</a></li></ul>'
+    else
+      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li> | <li><a href=\"archive.html\">archive</a></li></ul>"
+  fi
   footer 
 } 
 
