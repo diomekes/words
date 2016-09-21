@@ -1,0 +1,191 @@
+#!/bin/bash
+
+title="blog"
+lang=(en fr)
+posts="20"
+width="800"
+imgdir="images"
+
+main () {
+  for dir in "${lang[@]}"
+    do
+      images
+      if [ ${dir} = ${lang[0]} ]
+        then
+          index > "index.html"
+          archive > "${dir}/archive.html"
+          find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
+            do
+              title=$(basename "${md}" .md)
+              post > "${dir}/${title}.html"
+            done
+        else
+          index > "${dir}/index.html"
+          archive > "${dir}/archive.html"
+          find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
+            do
+              title=$(basename "${md}" .md)
+              post > "${dir}/${title}.html"
+            done
+      fi
+    done
+}
+
+header () {
+  echo '<!DOCTYPE html>'
+  echo "<html lang=\"${dir}\">"
+  echo '  <head>'
+  echo "    <title>${title}</title>"
+  echo '    <meta charset="UTF-8" />'
+  echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+  if [ ${dir} = ${lang[0]} ] && [ ${FUNCNAME[1]} = "index" ]
+    then
+      echo "    <link href=\"css/main.css\" rel=\"stylesheet\" />"
+    else
+      echo "    <link href=\"../css/main.css\" rel=\"stylesheet\" />"
+  fi
+  echo '  </head>'
+  echo '  <body>'
+  echo '    <header>'
+  if [ ${#lang[@]} -gt 1 ]
+    then
+      echo '      <ul>'
+      echo "        ${header_links[@]}" | sed 's/\(.*\) | <\/li>/\1<\/li> /'
+      echo '      </ul>'
+  fi
+  echo '    </header>'
+  echo '    <main>'
+}
+
+footer () {
+  echo '    </main>'
+  echo '    <footer>'
+  echo "  ${footer_links}"
+  echo '    </footer>'
+  echo '  </body>'
+  echo '</html>'
+}
+
+cleanup () {
+  find . -type f -name \*.html -delete
+}
+
+images () {
+  find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
+    do
+      image_list=($(cat ${md} | grep "\!\\[" | awk -F / '{print $2}' | awk -F \" '{print $1}' | sed 's/ //'))
+      if [[ $image_list ]]
+        then
+          for image in ${image_list[@]}
+            do
+              mogrify -auto-orient -resize "${width}>" "${imgdir}/${image}"
+            done
+      fi
+    done
+}      
+
+index () {
+  count=${#lang[@]}
+  if [ ${dir} = ${lang[0]} ]
+    then
+      footer_links="    <ul><li><a href=\"${dir}/archive.html\">archive</a></li></ul>"
+    else
+      footer_links='    <ul><li><a href="archive.html">archive</a></li></ul>'
+  fi
+  if [ ${#lang[@]} -gt 1 ]
+    then
+      if [ ${dir} = ${lang[0]} ]
+        then
+          until [ "$count" = 0 ]
+            do
+              count=$(( count - 1 ))
+              if [ ${count} = 0 ]
+                then
+                  header_links[$count]="<li><a href=\".\">${lang[$count]}</a> | </li>"
+                else
+                  header_links[$count]="<li><a href=\"${lang[$count]}/\">${lang[$count]}</a> | </li>"
+              fi
+            done
+        else
+          until [ "$count" = 0 ]
+            do
+              count=$(( count - 1 ))
+              if [ ${count} = 0 ]
+                then
+                  header_links[$count]="<li><a href=\"..\">${lang[$count]}</a> | </li>"
+                else
+                  header_links[$count]="<li><a href=\"../${lang[$count]}/\">${lang[$count]}</a> | </li>"
+              fi
+            done
+      fi
+  fi
+  header
+  find "${dir}" -type f -iname \*.md | sort -r | head -n ${posts} | while IFS= read -r md
+    do
+      echo '      <article>'
+      if [ ${dir} = ${lang[0]} ]
+        then
+          markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d'
+        else
+          markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d' | sed -e "s/${imgdir}/..\/${imgdir}/g"
+      fi
+      echo '      </article>'
+    done
+  footer
+}
+
+archive () {
+  local title="${title} - archive"
+  count=${#lang[@]}
+  if [ ${dir} = ${lang[0]} ]
+    then  
+      footer_links='    <ul><li><a href="..">index</a></li></ul>'
+    else
+      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li></ul>"
+  fi
+  if [ ${#lang[@]} -gt 1 ]
+    then
+      until [ "$count" = 0 ]
+        do
+          count=$(( count - 1 ))
+          header_links[$count]="<li><a href=\"../${lang[$count]}/archive.html\">${lang[$count]}</a> | </li>"
+        done
+  fi
+  header
+  find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
+    do
+      local title=$(basename "${md}" .md)
+      echo "      <h2 class=\"center\"><a href=${title}.html>${title}</a></h2>"
+    done
+  footer
+}   
+
+post () {
+  count=${#lang[@]}
+  if [ ${dir} = ${lang[0]} ]
+    then  
+      footer_links='    <ul><li><a href="..">index</a></li> | <li><a href="archive.html">archive</a></li></ul>'
+    else
+      footer_links="    <ul><li><a href=\"../${dir}/\">index</a></li> | <li><a href=\"archive.html\">archive</a></li></ul>"
+  fi
+  if [ ${#lang[@]} -gt 1 ]
+    then
+      until [ "$count" = 0 ]
+        do
+          count=$(( count - 1 ))
+          header_links[$count]="<li><a href=\"../${lang[$count]}/${title}.html\">${lang[$count]}</a></li> | </li>"
+        done
+  fi
+  header
+  echo '      <article>'
+  markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d' | sed -e "s/${imgdir}/..\/${imgdir}/g"
+  echo '      </article>'
+  footer 
+} 
+
+if [ "$1" = "cleanup" ]
+  then
+    cleanup
+  else
+    main $1
+fi
