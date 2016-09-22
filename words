@@ -10,7 +10,7 @@ main () {
   for dir in "${lang[@]}"
     do
       images
-      if [ ${dir} = ${lang[0]} ]
+      if [ "${dir}" = "${lang[0]}" ]
         then
           index > "index.html"
           archive > "${dir}/archive.html"
@@ -38,7 +38,7 @@ header () {
   echo "    <title>${title}</title>"
   echo '    <meta charset="UTF-8" />'
   echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0">'
-  if [ ${dir} = ${lang[0]} ] && [ ${FUNCNAME[1]} = "index" ]
+  if [ "${dir}" = "${lang[0]}" ] && [ "${FUNCNAME[1]}" = "index" ]
     then
       echo "    <link href=\"css/main.css\" rel=\"stylesheet\" />"
     else
@@ -47,10 +47,10 @@ header () {
   echo '  </head>'
   echo '  <body>'
   echo '    <header>'
-  if [ ${#lang[@]} -gt 1 ]
+  if [ "${#lang[@]}" -gt 1 ]
     then
       echo '      <ul>'
-      echo "        ${header_links[@]}" | sed 's/\(.*\) | <\/li>/\1<\/li> /'
+      echo "        ${header_links[*]}" | sed 's/\(.*\) | <\/li>/\1<\/li> /'
       echo '      </ul>'
   fi
   echo '    </header>'
@@ -73,10 +73,10 @@ cleanup () {
 images () {
   find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
     do
-      image_list=($(cat ${md} | grep "\!\\[" | awk -F / '{print $2}' | awk -F \" '{print $1}' | sed 's/ //'))
-      if [[ $image_list ]]
+      image_list=($(grep "\!\\[" "${md}" | awk -F / '{print $2}' | awk -F \" '{print $1}' | sed 's/ //'))
+      if [[ -v ${image_list[@]} ]]
         then
-          for image in ${image_list[@]}
+          for image in "${image_list[@]}"
             do
               mogrify -auto-orient -resize "${width}>" "${imgdir}/${image}"
             done
@@ -88,7 +88,7 @@ index () {
   count=${#lang[@]}
   if [ ${#lang[@]} -gt 1 ]
     then
-      if [ ${dir} = ${lang[0]} ]
+      if [ "${dir}" = "${lang[0]}" ]
         then
           until [ "$count" = 0 ]
             do
@@ -117,7 +117,7 @@ index () {
   find "${dir}" -type f -iname \*.md | sort -r | head -n ${posts} | while IFS= read -r md
     do
       echo '      <article>'
-      if [ ${dir} = ${lang[0]} ]
+      if [ "${dir}" = "${lang[0]}" ]
         then
           markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d'
         else
@@ -125,7 +125,7 @@ index () {
       fi
       echo '      </article>'
     done
-  if [ ${dir} = ${lang[0]} ]
+  if [ "${dir}" = "${lang[0]}" ]
     then
       footer_links="    <ul><li><a href=\"${dir}/archive.html\">archive</a></li></ul>"
     else
@@ -148,10 +148,11 @@ archive () {
   header
   find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
     do
-      local title=$(basename "${md}" .md)
+      local title
+      title=$(basename "${md}" .md)
       echo "      <h2 class=\"center\"><a href=${title}.html>${title}</a></h2>"
     done
-  if [ ${dir} = ${lang[0]} ]
+  if [ "${dir}" = "${lang[0]}" ]
     then  
       footer_links='    <ul><li><a href="..">index</a></li></ul>'
     else
@@ -174,7 +175,7 @@ post () {
   echo '      <article>'
   markdown "${md}" | sed -e 's/^<h2>/        <h2>/g' -e 's/^<p>/          <p>/g' | sed -e ':a;N;$!ba;s/ \/>\n/ \/>/g' | sed -e '/^\s*$/d' | sed -e "s/${imgdir}/..\/${imgdir}/g"
   echo '      </article>'
-  if [ ${dir} = ${lang[0]} ]
+  if [ "${dir}" = "${lang[0]}" ]
     then  
       footer_links='    <ul><li><a href="..">index</a></li> | <li><a href="archive.html">archive</a></li></ul>'
     else
@@ -187,5 +188,5 @@ if [ "$1" = "cleanup" ]
   then
     cleanup
   else
-    main $1
+    main "$1"
 fi
