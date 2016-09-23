@@ -5,6 +5,9 @@ lang=(en fr)
 posts="20"
 width="400"
 imgdir="images"
+blogdir="$(pwd)"
+remotedir="user@server:directory"
+ssh_args="-p ###"
 
 main () {
   for dir in "${lang[@]}"
@@ -68,6 +71,10 @@ footer () {
 
 cleanup () {
   find . -type f -name \*.html -delete
+}
+
+upload () {
+  rsync -av -e "ssh ${ssh_args}" "${blogdir}" "${remotedir}"
 }
 
 images () {
@@ -187,6 +194,9 @@ post () {
 if [ "$1" = "cleanup" ]
   then
     cleanup
+  elif [ "$1" = "upload" ]
+    then
+      upload
   else
     main "$1"
 fi
