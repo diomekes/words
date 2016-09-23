@@ -3,7 +3,7 @@
 title="blog"
 lang=(en fr)
 posts="20"
-width="800"
+width="400"
 imgdir="images"
 
 main () {
@@ -74,7 +74,7 @@ images () {
   find "${dir}" -type f -iname \*.md | sort -r | while IFS= read -r md
     do
       image_list=($(grep "\!\\[" "${md}" | awk -F / '{print $2}' | awk -F \" '{print $1}' | sed 's/ //'))
-      if [[ -v ${image_list[@]} ]]
+      if [[ ${image_list[@]} ]]
         then
           for image in "${image_list[@]}"
             do

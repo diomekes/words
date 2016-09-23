@@ -180,6 +180,6 @@ main {
 article {
    max-width: 800px;
    display: inline-block;
-   vertical-align: middle;
-   margin: 0 1%;
+   vertical-align: top;
+   margin: 0 2%;
 }
